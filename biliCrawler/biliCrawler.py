@@ -21,7 +21,7 @@ class biliCrawler():
     def get_rank(self):
         a = requests.get(self.url, headers=self.header)
         data = json.loads(a.text)
-        df = pd.DataFrame(columns=['time', 'pub_location', 'title', 'tname', 'like', 'owner', 'bvid'])
+        df = pd.DataFrame(columns=['time', 'pub_location', 'title', 'tname', 'like', 'owner', 'bvid', 'picurl'])
         for item in data["data"]["list"]:
             title = item["title"]
             try:
@@ -32,11 +32,12 @@ class biliCrawler():
             like = item["stat"]["like"]
             owner = item["owner"]["name"]
             bvid = item["bvid"]
-            # pic = item["pic"]
+            picurl = item["pic"]
             df.loc[len(df)] = [time.strftime("%Y-%m-%d %H:%M", time.localtime()), pub_location, title, tname, like,
-                               owner, bvid]
+                               owner, bvid, picurl]
         print(df)
         return df.head(20)
+
     def get_oids(self):
         df_rank = self.get_rank()
         df_oids = pd.DataFrame(columns=['oid', 'bvid'])
@@ -51,6 +52,9 @@ class biliCrawler():
         # df_oids = pd.concat([df_rank, df_oids], axis=1)
         # print(df_oids)
         return pd.merge(df_rank, df_oids, on="bvid", how="inner")
+
+    def get_imgs(self):
+        pass
 
     def get_comments(self, n):
         df_oids = self.get_oids()
@@ -91,16 +95,23 @@ if __name__ == '__main__':
         "cookie": "buvid3=D74A61FE-9E8C-2005-8F9A-66A98C5348F923589infoc; b_nut=1696562923; i-wanna-go-back=-1; b_ut=7; _uuid=34CF738D-3E4B-CEB8-B2EB-6CFDA5BF378223828infoc; buvid4=28167CDE-3D7C-0669-20D3-129D4C9BF78424206-023100611-kTAtAg4Ew5AOCiR7whYGGg%3D%3D; DedeUserID=36611479; DedeUserID__ckMd5=fbde96d72483bd70; rpdid=|(J|~Ju)u~|R0J'uYmYlYkmll; hit-dyn-v2=1; LIVE_BUVID=AUTO5616965911294779; CURRENT_QUALITY=80; buvid_fp_plain=undefined; CURRENT_BLACKGAP=0; enable_web_push=DISABLE; header_theme_version=CLOSE; is-2022-channel=1; CURRENT_FNVAL=4048; go-back-dyn=0; bmg_af_switch=1; bmg_src_def_domain=i2.hdslb.com; SESSDATA=31c44b43%2C1718627673%2C379a8%2Ac2CjBMNeCUMBPCtYtGG1RZGhE-cXwJ7J6oa_8dNLpQ2Fyv2zTh3l4gJwzE6PtJ3OQqfwwSVnBtOVNFa2NfWlZJZFctVVVVYjg5SWIzX0ZKb0pNNlVGbEEtcnRZS2o4Sjd6N0F5R1ZNT044SUJWcUpPN0lBUlZ3ZDBOOFR0ODdZWHlUcnJlU3FBenRnIIEC; bili_jct=482c686432746fd0ef849091694fc9f4; sid=833mnv8u; bsource=search_google; bili_ticket=eyJhbGciOiJIUzI1NiIsImtpZCI6InMwMyIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MDM0MTQyMDgsImlhdCI6MTcwMzE1NDk0OCwicGx0IjotMX0.Sb3px8OqRMX3rfSnYs58WNERmsL_1ZLFBXLhQ_MYocM; bili_ticket_expires=1703414148; fingerprint=2ca00601fdddf9333e74c31a2e68cae7; buvid_fp=2ca00601fdddf9333e74c31a2e68cae7; PVID=1; b_lsid=C54C6359_18C8F5828A3; innersign=0; bp_video_offset_36611479=877781273949503529; home_feed_column=4; browser_resolution=730-726"
     }
 
-    comments_df = biliCrawler(url, header).get_comments(20)
+    results_df = biliCrawler(url, header).get_comments(2)
     parent_foldername = pathlib.Path(__file__).parent.resolve()
     child_foldername = time.strftime("%Y-%m-%d-%H", time.localtime())
     folder_name = os.path.join(parent_foldername, child_foldername)    
     if not os.path.exists(folder_name):
         os.mkdir(folder_name)
         os.mkdir(os.path.join(folder_name, 'comments'))
-    for i in comments_df.index:
-        filename = os.path.join(folder_name, 'comments', comments_df['bvid'][i] + ".csv")
-        comments_df['comments'][i].to_csv(filename, index=False, encoding="utf-8-sig")
+        os.mkdir(os.path.join(folder_name, 'imgs'))
+    for i in results_df.index:
+        filename = os.path.join(folder_name, 'comments', results_df['bvid'][i] + ".csv")
+        results_df['comments'][i].to_csv(filename, index=False, encoding="utf-8-sig")
 
-    comments_df.loc[:, comments_df.columns != 'comments'].to_csv(os.path.join(folder_name, "rank.csv"), index=False,
+        with open(os.path.join(folder_name,'imgs', results_df['bvid'][i] + ".jpg"), 'wb') as f:
+            f.write(requests.get(results_df['picurl'][i]).content)
+
+    results_df.loc[:, results_df.columns != 'comments'].to_csv(os.path.join(folder_name, "rank.csv"), index=False,
                                                                  encoding="utf-8-sig")
+
+
+        
