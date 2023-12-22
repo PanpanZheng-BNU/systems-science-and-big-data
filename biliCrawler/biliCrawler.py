@@ -1,9 +1,11 @@
+#!/home/zpp/miniconda3/bin/python
+
 import requests
 import json
 import time
 import pandas as pd
 import re
-import os
+import os, pathlib
 
 
 class biliCrawler():
@@ -34,7 +36,7 @@ class biliCrawler():
             df.loc[len(df)] = [time.strftime("%Y-%m-%d %H:%M", time.localtime()), pub_location, title, tname, like,
                                owner, bvid]
         print(df)
-        return df
+        return df.head(5)
     def get_oids(self):
         df_rank = self.get_rank()
         df_oids = pd.DataFrame(columns=['oid', 'bvid'])
@@ -59,34 +61,46 @@ class biliCrawler():
             for j in range(n):
                 re_comments = requests.get(self.comments_url.format(j, df_oids['oid'][i]), headers=self.header).json()
                 comments = []
-                for k in re_comments['data']['replies']:
-                    comment = k['content']['message']
-                    comments.append(comment)
-                    like = k['like']
-                    df.loc[len(df)] = [comment, like]
-                print("搜集到%d条评论" % (len(comments)))
-            df.drop_duplicates(inplace=True)
-            df.sort_values(by='like', ascending=False, inplace=True)
+                if 'data' in re_comments.keys():
+                    for k in re_comments['data']['replies']:
+                        comment = k['content']['message']
+                        comments.append(comment)
+                        like = k['like']
+                        df.loc[len(df)] = [comment, like]
+                    print("搜集到%d条评论" % (len(comments)))
+                else:
+                    print("无评论")
+
+
+                df.drop_duplicates(inplace=True)
+                df.sort_values(by='like', ascending=False, inplace=True)
             df_comments.loc[len(df_comments)] = [df, df_oids['bvid'][i]]
+            print("完成第{}个视频评论区爬取，休息1s\n ====================\n".format(i+1))
+            time.sleep(1)
         return pd.merge(df_oids, df_comments, on="bvid", how="inner")
 
 
 
 if __name__ == '__main__':
-    url = "https://api.bilibili.com/x/web-interface/popular?ps=20&pn=1"
+    parent_foldername = pathlib.Path(__file__).parent.resolve()
+    with open(os.path.join(parent_foldername,'log.txt'), 'a+') as f:
+        f.write('run at {} \n'.format(time.strftime("%Y-%m-%d %H:%M", time.localtime())))
+    url = "https://api.bilibili.com/x/web-interface/ranking/v2?rid=0&type=all"
     header = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 ",
         "cookie": "SESSDATA=31c44b43%2C1718627673%2C379a8%2Ac2CjBMNeCUMBPCtYtGG1RZGhE-cXwJ7J6oa_8dNLpQ2Fyv2zTh3l4gJwzE6PtJ3OQqfwwSVnBtOVNFa2NfWlZJZFctVVVVYjg5SWIzX0ZKb0pNNlVGbEEtcnRZS2o4Sjd6N0F5R1ZNT044SUJWcUpPN0lBUlZ3ZDBOOFR0ODdZWHlUcnJlU3FBenRnIIEC"
     }
 
     comments_df = biliCrawler(url, header).get_comments(10)
-    folder_name = time.strftime("%Y-%m-%d-%H", time.localtime())
+    parent_foldername = pathlib.Path(__file__).parent.resolve()
+    child_foldername = time.strftime("%Y-%m-%d-%H", time.localtime())
+    folder_name = os.path.join(parent_foldername, child_foldername)    
     if not os.path.exists(folder_name):
         os.mkdir(folder_name)
-        os.mkdir(folder_name + "/comments")
+        os.mkdir(os.path.join(folder_name, 'comments'))
     for i in comments_df.index:
-        filename = folder_name + "/comments/" + comments_df['bvid'][i] + ".csv"
+        filename = os.path.join(folder_name, 'comments', comments_df['bvid'][i] + ".csv")
         comments_df['comments'][i].to_csv(filename, index=False, encoding="utf-8-sig")
 
-    comments_df.loc[:, comments_df.columns != 'comments'].to_csv(folder_name + "/rank.csv", index=False,
+    comments_df.loc[:, comments_df.columns != 'comments'].to_csv(os.path.join(folder_name, "rank.csv"), index=False,
                                                                  encoding="utf-8-sig")
