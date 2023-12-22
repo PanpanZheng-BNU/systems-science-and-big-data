@@ -36,7 +36,7 @@ class biliCrawler():
             df.loc[len(df)] = [time.strftime("%Y-%m-%d %H:%M", time.localtime()), pub_location, title, tname, like,
                                owner, bvid]
         print(df)
-        return df.head(5)
+        return df.head(20)
     def get_oids(self):
         df_rank = self.get_rank()
         df_oids = pd.DataFrame(columns=['oid', 'bvid'])
@@ -83,15 +83,15 @@ class biliCrawler():
 
 if __name__ == '__main__':
     parent_foldername = pathlib.Path(__file__).parent.resolve()
-    with open(os.path.join(parent_foldername,'log.txt'), 'a+') as f:
+    with open(os.path.join(parent_foldername,'run_time.log'), 'a+') as f:
         f.write('run at {} \n'.format(time.strftime("%Y-%m-%d %H:%M", time.localtime())))
     url = "https://api.bilibili.com/x/web-interface/ranking/v2?rid=0&type=all"
     header = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 ",
-        "cookie": "SESSDATA=31c44b43%2C1718627673%2C379a8%2Ac2CjBMNeCUMBPCtYtGG1RZGhE-cXwJ7J6oa_8dNLpQ2Fyv2zTh3l4gJwzE6PtJ3OQqfwwSVnBtOVNFa2NfWlZJZFctVVVVYjg5SWIzX0ZKb0pNNlVGbEEtcnRZS2o4Sjd6N0F5R1ZNT044SUJWcUpPN0lBUlZ3ZDBOOFR0ODdZWHlUcnJlU3FBenRnIIEC"
+        "cookie": "buvid3=D74A61FE-9E8C-2005-8F9A-66A98C5348F923589infoc; b_nut=1696562923; i-wanna-go-back=-1; b_ut=7; _uuid=34CF738D-3E4B-CEB8-B2EB-6CFDA5BF378223828infoc; buvid4=28167CDE-3D7C-0669-20D3-129D4C9BF78424206-023100611-kTAtAg4Ew5AOCiR7whYGGg%3D%3D; DedeUserID=36611479; DedeUserID__ckMd5=fbde96d72483bd70; rpdid=|(J|~Ju)u~|R0J'uYmYlYkmll; hit-dyn-v2=1; LIVE_BUVID=AUTO5616965911294779; CURRENT_QUALITY=80; buvid_fp_plain=undefined; CURRENT_BLACKGAP=0; enable_web_push=DISABLE; header_theme_version=CLOSE; is-2022-channel=1; CURRENT_FNVAL=4048; go-back-dyn=0; bmg_af_switch=1; bmg_src_def_domain=i2.hdslb.com; SESSDATA=31c44b43%2C1718627673%2C379a8%2Ac2CjBMNeCUMBPCtYtGG1RZGhE-cXwJ7J6oa_8dNLpQ2Fyv2zTh3l4gJwzE6PtJ3OQqfwwSVnBtOVNFa2NfWlZJZFctVVVVYjg5SWIzX0ZKb0pNNlVGbEEtcnRZS2o4Sjd6N0F5R1ZNT044SUJWcUpPN0lBUlZ3ZDBOOFR0ODdZWHlUcnJlU3FBenRnIIEC; bili_jct=482c686432746fd0ef849091694fc9f4; sid=833mnv8u; bsource=search_google; bili_ticket=eyJhbGciOiJIUzI1NiIsImtpZCI6InMwMyIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MDM0MTQyMDgsImlhdCI6MTcwMzE1NDk0OCwicGx0IjotMX0.Sb3px8OqRMX3rfSnYs58WNERmsL_1ZLFBXLhQ_MYocM; bili_ticket_expires=1703414148; fingerprint=2ca00601fdddf9333e74c31a2e68cae7; buvid_fp=2ca00601fdddf9333e74c31a2e68cae7; PVID=1; b_lsid=C54C6359_18C8F5828A3; innersign=0; bp_video_offset_36611479=877781273949503529; home_feed_column=4; browser_resolution=730-726"
     }
 
-    comments_df = biliCrawler(url, header).get_comments(10)
+    comments_df = biliCrawler(url, header).get_comments(20)
     parent_foldername = pathlib.Path(__file__).parent.resolve()
     child_foldername = time.strftime("%Y-%m-%d-%H", time.localtime())
     folder_name = os.path.join(parent_foldername, child_foldername)    
