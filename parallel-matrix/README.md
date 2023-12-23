@@ -1,4 +1,10 @@
 # matrix multiplication
+<figure>
+<img src="./change.svg"/>
+<figcaption style="font-size:smaller">
+固定 m,n,p 三者中的两个（固定为 500），改变第三个，对比不同 m, n,p 情况下，并行和串行矩阵运算的速度。（每种情况下，对于并行串行各运行5次）
+</figcaption>
+</figure>
 ## `.c` 文件
 - `myfuncs.c`：核心文件，存储矩阵乘法计算的函数 `single_multiplication()`（串行） `multi_multiplication()`（并行），生成矩阵的函数 `gen_mat()`，展示矩阵的函数 `show_mat()` 以及将矩阵写入 `.csv` 文件的函数 `write_csv()`。
     - `compare_run.c`：用于执行 `myfuncs.c` 并输出运算时间；
