@@ -112,6 +112,3 @@ if __name__ == '__main__':
 
     results_df.loc[:, results_df.columns != 'comments'].to_csv(os.path.join(folder_name, "rank.csv"), index=False,
                                                                  encoding="utf-8-sig")
-
-
-        
